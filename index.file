@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel de Logins</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f3f3f3;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+    }
+    .login-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #ddd;
+    }
+    .status {
+      font-weight: bold;
+    }
+    button {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .usar { background-color: #4caf50; color: white; }
+    .liberar { background-color: #f44336; color: white; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Painel de Logins</h1>
+    <div id="logins"></div>
+  </div>
+
+  <script>
+    // Substitua pelos seus dados do Supabase
+    const SUPABASE_URL = 'https://serpmdhwdtwopzycvhtu.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlcnBtZGh3ZHR3b3B6eWN2aHR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMzNjczMTUsImV4cCI6MjA2ODk0MzMxNX0.TQgaBvYSjOiSgK1i8ldr7e3r06ur7pzoAJwpKBsh_kk';
+
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function render() {
+      const { data: logins } = await supabase.from('logins').select('*');
+      const container = document.getElementById("logins");
+      container.innerHTML = "";
+
+      logins.forEach((login) => {
+        const div = document.createElement("div");
+        div.className = "login-item";
+        div.innerHTML = `
+          <span><strong>${login.nome}</strong> - <span class="status">${login.status === "livre" ? "✅ Livre" : `❌ Ocupado (${login.por})`}</span></span>
+          <button class="${login.status === "livre" ? "usar" : "liberar"}" onclick="toggleLogin(${login.id}, '${login.status}')">
+            ${login.status === "livre" ? "Usar" : "Liberar"}
+          </button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    async function toggleLogin(id, statusAtual) {
+      const nome = prompt("Digite seu nome para registrar o uso:");
+      if (!nome) return;
+
+      const novoStatus = statusAtual === "livre" ? "ocupado" : "livre";
+      const novoPor = novoStatus === "livre" ? "" : nome;
+
+      await supabase.from('logins').update({ status: novoStatus, por: novoPor }).eq('id', id);
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>
